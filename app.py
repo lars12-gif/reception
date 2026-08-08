@@ -86,7 +86,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 4. جلب البيانات من Supabase
+# 4. جلب البيانات من Supabase (تعديل الجدول إلى work_members ليتزامن تماماً مع الوورك)
 def load_data():
     default_data = {
         "registered_nicknames": ["آرثر", "لامينو", "Arthur", "Lamino"],
@@ -95,7 +95,7 @@ def load_data():
     if supabase is None:
         return default_data, False
     try:
-        response = supabase.table("members").select("*").execute()
+        response = supabase.table("work_members").select("*").execute()
         records = response.data if response.data else []
         nicknames = [str(r.get("nickname", "")).strip() for r in records if r.get("nickname")]
         for dn in default_data["registered_nicknames"]:
@@ -189,12 +189,12 @@ if st.session_state.admin_logged_in:
 
     st.write("---")
     
-    # 2. قسم سجل الأعضاء وإدارتهم
+    # 2. قسم سجل الأعضاء وإدارتهم (الحذف المتبادل من table work_members)
     st.markdown("### 📋 سجل الأعضاء وإدارة الحذف المتبادل")
     
     if db_data["members"]:
         reversed_members = list(reversed(db_data["members"]))
-        member_options = [f"{m['nickname']} - ({m['phone']})" for m in reversed_members]
+        member_options = [f"{m.get('nickname', 'بدون لقب')} - ({m.get('phone', 'بدون رقم')})" for m in reversed_members]
         
         selected_option = st.selectbox("اختر العضو لعرض تفاصيله أو حذفه:", options=member_options)
         selected_index = member_options.index(selected_option)
@@ -202,29 +202,30 @@ if st.session_state.admin_logged_in:
         
         st.markdown(f"""
         <div style="background: rgba(255, 179, 198, 0.08); border: 1px solid #ffb3c6; border-radius: 12px; padding: 18px; margin-top: 15px;">
-            <p style="margin: 4px 0;">👑 <b>اللقب:</b> {selected_member['nickname']}</p>
-            <p style="margin: 4px 0;">📱 <b>الرقم:</b> {selected_member['phone']}</p>
-            <p style="margin: 4px 0;">🤝 <b>من طرف:</b> {selected_member.get('referrer', 'مباشر')}</p>
+            <p style="margin: 4px 0;">👑 <b>اللقب:</b> {selected_member.get('nickname', '')}</p>
+            <p style="margin: 4px 0;">📱 <b>الرقم:</b> {selected_member.get('phone', '')}</p>
+            <p style="margin: 4px 0;">🤝 <b>صاحب الدعوة:</b> {selected_member.get('referrer', 'مباشر')}</p>
+            <p style="margin: 4px 0;">🤝 <b>مسؤول الاستقبال:</b> {selected_member.get('received_by', 'غير محدد')}</p>
             <p style="margin: 4px 0; font-size: 12px; color: #ff7aa2;">📅 <b>تاريخ التسجيل:</b> {selected_member.get('date', '')}</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button(f"🗑️ حذف العضو ({selected_member['nickname']})"):
+        if st.button(f"🗑️ حذف العضو ({selected_member.get('nickname', '')})"):
             if supabase:
                 try:
-                    supabase.table("members").delete().eq("phone", str(selected_member['phone'])).execute()
+                    supabase.table("work_members").delete().eq("phone", str(selected_member.get('phone', ''))).execute()
                 except Exception as e:
                     st.error(f"خطأ أثناء الحذف من القاعدة: {e}")
-            st.success(f"تم حذف العضو ({selected_member['nickname']}) بنجاح من النظامين!")
+            st.success(f"تم حذف العضو ({selected_member.get('nickname', '')}) بنجاح من النظامين!")
             st.rerun()
             
         st.markdown("<br><b>📝 رسالة الترحيب المجهزة للواتساب:</b>", unsafe_allow_html=True)
-        clean_tag = selected_member['phone']
+        clean_tag = selected_member.get('phone', '')
         welcome_text = (
             f"🌸 ✨ أهـلاً وسهـلاً بـالعـضـو الـجـديـد ✨ 🌸\n\n"
-            f"👑 اللقب: {selected_member['nickname']}\n"
+            f"👑 اللقب: {selected_member.get('nickname', '')}\n"
             f"📱 الرقم: @{clean_tag}\n"
             f"🏰 مرحباً بك في عالم BELLONA 🌟\n\n"
             f"نورت الجروب يا بطل! يسعدنا انضمامك لعائلتنا الرهيبة 🔥🤍"
@@ -256,7 +257,8 @@ else:
         with st.container():
             phone_input = st.text_input("رقم الهاتف (مع رمز الدولة)", placeholder="+9647700000000")
             nick_input = st.text_input("اللقب المختار", placeholder="اكتب لقبك هنا...")
-            referrer_input = st.text_input("من طرف منو أتيت؟ (الاستقبال)", placeholder="اسم العضو صاحب الدعوة")
+            referrer_input = st.text_input("صاحب الدعوة (المستضيف)", placeholder="اسم العضو صاحب الدعوة")
+            receiver_input = st.text_input("تم الاستقبال من طرف (مسؤول الاستقبال)", placeholder="اسم مسؤول الاستقبال")
 
             phone_valid = is_valid_phone(phone_input)
             phone_registered = is_phone_registered(phone_input, db_data["members"]) if phone_input else False
@@ -284,15 +286,16 @@ else:
             if st.button("تأكيد البيانات وتوليد رابط الدخول", disabled=not form_ready):
                 clean_digits_only = re.sub(r'\D', '', phone_input.strip())
                 new_entry = {
-                    "phone": clean_digits_only,
                     "nickname": nick_input.strip(),
+                    "phone": clean_digits_only,
                     "referrer": referrer_input.strip(),
+                    "received_by": receiver_input.strip() if receiver_input.strip() else "غير محدد",
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 
                 if supabase:
                     try:
-                        supabase.table("members").insert(new_entry).execute()
+                        supabase.table("work_members").insert(new_entry).execute()
                     except Exception as e:
                         st.error(f"خطأ في الحفظ بقاعدة البيانات: {e}")
                 
@@ -318,4 +321,3 @@ else:
             if admin_pass == ADMIN_PASSWORD:
                 st.session_state.admin_logged_in = True
                 st.rerun()
-    
