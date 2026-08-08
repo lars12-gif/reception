@@ -38,7 +38,7 @@ SCOPES = [
 ]
 
 def get_gspread_client():
-    creds = Credentials.from_service_account_file("bellona-504904-2c178e02693d.json", scopes=SCOPES)
+    creds = Credentials.from_service_account_file("bellona-504904-b87b2212f80a.json", scopes=SCOPES)
     return gspread.authorize(creds)
 
 def get_sheet(sheet_name):
