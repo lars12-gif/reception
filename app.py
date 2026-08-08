@@ -10,7 +10,7 @@ from datetime import datetime
 # 1. كلمة السر الخاصة بداخلية الإشراف
 ADMIN_PASSWORD = "bellona2026"
 
-# 2. إعدادات الصفحة المتقدمة وجماليات الساكورا (Sakura Aesthetic)
+# 2. إعدادات الصفحة وجماليات الساكورا (Sakura Aesthetic)
 st.set_page_config(
     page_title="بوابة استقبال BELLONA",
     page_icon="🌸",
@@ -71,24 +71,31 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. إدارة ملف البيانات Local JSON
+# 3. إدارة ملف البيانات Local JSON المحصنة ضد خطأ القراءة
 DATA_FILE = "data.json"
-
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        default_data = {
-            "registered_nicknames": ["آرثر", "لامينو", "Arthur", "Lamino"],
-            "members": []
-        }
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(default_data, f, ensure_ascii=False, indent=4)
-        return default_data
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
 
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+def load_data():
+    default_data = {
+        "registered_nicknames": ["آرثر", "لامينو", "Arthur", "Lamino"],
+        "members": []
+    }
+    
+    # فحص وجود الملف وحجمه لضمان عدم القراءة من ملف فارغ
+    if not os.path.exists(DATA_FILE) or os.path.getsize(DATA_FILE) == 0:
+        save_data(default_data)
+        return default_data
+        
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        # معالجة أي خلل أو ملف مكسور وإعادة الهيكلة تلقائياً
+        save_data(default_data)
+        return default_data
 
 db_data = load_data()
 
@@ -170,7 +177,6 @@ if not st.session_state.submitted:
         st.markdown("<br>", unsafe_allow_html=True)
         
         if st.button("تأكيد البيانات وتوليد رابط الدخول", disabled=not form_ready):
-            # استخراج الأرقام فقط بدون + أو رموز لضمان المنشن النظيف
             clean_digits_only = re.sub(r'\D', '', phone_input.strip())
             
             new_entry = {
@@ -236,7 +242,6 @@ with col2:
                         st.markdown(f"👤 **اللقب:** `{member['nickname']}` | 📱 **الرقم:** `{member['phone']}`")
                         st.caption(f"🤝 من طرف: {member['referrer']} | 📅 {member['date']}")
                         
-                        # توليد نص المنشن بدون أي أقواس أو رموز إضافية لضمان عمل منشن الواتساب تلقائياً
                         clean_tag = member['phone']
                         
                         welcome_text = (
@@ -249,7 +254,6 @@ with col2:
                             f"نتمنى لك إقامة خرافية معنا! 🚀✨"
                         )
                         
-                        # كود مخصص يتيح النسخ بضغطة زر واحدة
                         st.code(welcome_text, language="text")
                         st.write("---")
             else:
@@ -257,4 +261,4 @@ with col2:
                 
             st.markdown("**الألقاب المحجوزة حالياً:**")
             st.write(", ".join(db_data["registered_nicknames"]))
-                
+    
