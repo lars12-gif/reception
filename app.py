@@ -37,7 +37,6 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-@st.cache_resource
 def get_gspread_client():
     creds = Credentials.from_service_account_file("bellona-504904-2c178e02693d.json", scopes=SCOPES)
     return gspread.authorize(creds)
@@ -254,4 +253,4 @@ else:
             if admin_pass == ADMIN_PASSWORD:
                 st.session_state.admin_logged_in = True
                 st.rerun()
-        
+    
