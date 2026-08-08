@@ -44,7 +44,6 @@ def get_gspread_client():
 
 def get_sheet(sheet_name):
     client = get_gspread_client()
-    # اسم ملف الشيت الرئيسي في Google Drive
     sh = client.open("BELLONA_DB")
     return sh.worksheet(sheet_name)
 
@@ -53,7 +52,6 @@ def load_data_from_sheet():
         sheet = get_sheet("members")
         records = sheet.get_all_records()
         nicknames = [str(r.get("nickname", "")).strip() for r in records if r.get("nickname")]
-        # إضافة ألقاب افتراضية لو القائمة فارغة
         default_nicks = ["آرثر", "لامينو", "Arthur", "Lamino"]
         for dn in default_nicks:
             if dn not in nicknames:
@@ -256,52 +254,4 @@ else:
             if admin_pass == ADMIN_PASSWORD:
                 st.session_state.admin_logged_in = True
                 st.rerun()
-_valid and (not phone_registered) and (not nick_taken) and referrer_valid
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            if st.button("تأكيد البيانات وتوليد رابط الدخول", disabled=not form_ready):
-                clean_digits_only = re.sub(r'\D', '', phone_input.strip())
-                
-                new_entry = {
-                    "phone": clean_digits_only,
-                    "nickname": nick_input.strip(),
-                    "referrer": referrer_input.strip(),
-                    "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-                
-                db_data["members"].append(new_entry)
-                db_data["registered_nicknames"].append(nick_input.strip())
-                save_data(db_data)
-                
-                st.session_state.submitted = True
-                st.rerun()
-
-    else:
-        st.success("🎉 تم التحقق من بياناتك وتسجيل لقبك بنجاح!")
-        st.markdown("""
-        <div style="text-align: center; margin-top: 20px;">
-            <p style="color: #ffb3c6; font-size: 16px;">اضغط على الزر أدناه للانضمام للمجموعة مباشرة:</p>
-            <a href="https://chat.whatsapp.com/YOUR_GROUP_LINK_HERE" target="_blank" style="
-                display: inline-block;
-                padding: 14px 28px;
-                background: #25d366;
-                color: white;
-                text-decoration: none;
-                font-weight: bold;
-                border-radius: 12px;
-                box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
-            ">📱 دخول جروب BELLONA الآن</a>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # 6. الزر المخفي في أسفل الصفحة
-    st.markdown("<br><hr style='border-color: rgba(255,255,255,0.05);'><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        with st.expander("🌸", expanded=False):
-            admin_pass = st.text_input("رمز مرور المشرفين", type="password")
-            if admin_pass == ADMIN_PASSWORD:
-                st.session_state.admin_logged_in = True
-                st.rerun()
-    
+        
