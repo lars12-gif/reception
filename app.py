@@ -7,14 +7,16 @@ from difflib import SequenceMatcher
 import pandas as pd
 from datetime import datetime
 
-# 1. إعدادات الصفحة وجماليات الساكورا (Sakura Aesthetic)
+# 1. كلمة السر الخاصة بداخلية الإشراف
+ADMIN_PASSWORD = "bellona2026"
+
+# 2. إعدادات الصفحة المتقدمة وجماليات الساكورا (Sakura Aesthetic)
 st.set_page_config(
-    page_title="بوابة الاستقبال والانضمام",
+    page_title="بوابة استقبال BELLONA",
     page_icon="🌸",
     layout="centered"
 )
 
-# تصميم CSS مخصص بثيم الساكورا والوضع الداكن
 st.markdown("""
 <style>
     /* الخلفية العامة */
@@ -63,13 +65,13 @@ st.markdown("""
         color: #000;
     }
     
-    /* إخفاء القوائم الافتراضية */
+    /* إخفاء عناصر ستريمليت الافتراضية */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# 2. إدارة ملف البيانات Local JSON
+# 3. إدارة ملف البيانات Local JSON
 DATA_FILE = "data.json"
 
 def load_data():
@@ -90,18 +92,18 @@ def save_data(data):
 
 db_data = load_data()
 
-# 3. خوارزميات تنظيف النصوص والتحقق الذكي من الألقاب (Fuzzy Normalization)
+# 4. خوارزميات تنظيف النصوص والتحقق الذكي من الألقاب (Fuzzy Normalization)
 def normalize_arabic(text):
     if not text:
         return ""
     text = text.strip().lower()
-    text = re.sub(r'ـ+', '', text)  # إزالة التطويل
-    text = re.sub(r'[\u064B-\u0652]', '', text)  # إزالة التشكيل
-    text = re.sub(r'[أإآ]', 'ا', text)  # توحيد الألف
-    text = re.sub(r'ى', 'ي', text)  # توحيد الألف المقصورة
-    text = re.sub(r'ة', 'ه', text)  # توحيد التاء المربوطة
-    text = re.sub(r'[^\w\s]', '', text)  # إزالة الرموز والنقاط
-    text = re.sub(r'\s+', ' ', text)  # توحيد المسافات
+    text = re.sub(r'ـ+', '', text)
+    text = re.sub(r'[\u064B-\u0652]', '', text)
+    text = re.sub(r'[أإآ]', 'ا', text)
+    text = re.sub(r'ى', 'ي', text)
+    text = re.sub(r'ة', 'ه', text)
+    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'\s+', ' ', text)
     return text
 
 def is_nickname_taken(new_nick, existing_nicks, threshold=0.80):
@@ -112,18 +114,16 @@ def is_nickname_taken(new_nick, existing_nicks, threshold=0.80):
     for existing in existing_nicks:
         norm_exist = normalize_arabic(existing)
         
-        # تطابق تام بعد التنظيف
         if norm_new == norm_exist:
-            return True, f"اللقب مطاطب أو محجوز سابقاً ({existing})"
+            return True, f"اللقب مطابق أو محجوز سابقاً ({existing})"
         
-        # نسبة التشابه
         ratio = SequenceMatcher(None, norm_new, norm_exist).ratio()
         if ratio >= threshold:
             return True, f"اللقب مشابه جداً للقب مسجل سابقاً ({existing})"
             
     return False, "اللقب متاح للانضمام"
 
-# 4. فحص صحة رقم الهاتف
+# 5. فحص صحة رقم الهاتف
 def is_valid_phone(phone_str):
     try:
         parsed = phonenumbers.parse(phone_str, None)
@@ -131,16 +131,15 @@ def is_valid_phone(phone_str):
     except:
         return False
 
-# 5. الواجهة الرئيسية
+# 6. الواجهة الرئيسية
 st.markdown("""
 <div class="main-card">
-    <h1>🌸 بوابة الاستقبال والانضمام 🌸</h1>
-    <div class="sub-title">الإشراف من قبل آرثر والمساعد لامينو</div>
-    <p style="font-size: 13px; color: #d8c2ce;">يرجى إكمال الاستمارة أدناه لتأكيد هويتك والانضمام للجروب الرسمي</p>
+    <h1>🌸 بوابة استقبال BELLONA 🌸</h1>
+    <div class="sub-title">أهلاً بك في مجتمع BELLONA الرسمي</div>
+    <p style="font-size: 13px; color: #d8c2ce;">يرجى إكمال الاستمارة أدناه لتأكيد هويتك وتوليد رابط الانضمام</p>
 </div>
 """, unsafe_allow_html=True)
 
-# تهيئة Session State لتتبع نجاح التسجيل
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
@@ -150,12 +149,10 @@ if not st.session_state.submitted:
         nick_input = st.text_input("اللقب المختار", placeholder="اكتب لقبك هنا...")
         referrer_input = st.text_input("من طرف منو أتيت؟ (الاستقبال)", placeholder="اسم العضو أو الجهة الداعية")
 
-        # التحقق اللحظي من المدخلات
         phone_valid = is_valid_phone(phone_input)
         nick_taken, nick_msg = is_nickname_taken(nick_input, db_data["registered_nicknames"]) if nick_input else (True, "")
         referrer_valid = len(referrer_input.strip()) > 0
 
-        # مؤشرات حالة المدخلات
         if phone_input:
             if phone_valid:
                 st.caption("✅ رقم الهاتف صحيح ومفعل")
@@ -168,15 +165,16 @@ if not st.session_state.submitted:
             else:
                 st.caption("❌ " + nick_msg)
 
-        # شروط تفعيل الزر
         form_ready = phone_valid and (not nick_taken) and referrer_valid
 
         st.markdown("<br>", unsafe_allow_html=True)
         
         if st.button("تأكيد البيانات وتوليد رابط الدخول", disabled=not form_ready):
-            # حفظ العضو الجديد
+            # استخراج الأرقام فقط بدون + أو رموز لضمان المنشن النظيف
+            clean_digits_only = re.sub(r'\D', '', phone_input.strip())
+            
             new_entry = {
-                "phone": phone_input.strip(),
+                "phone": clean_digits_only,
                 "nickname": nick_input.strip(),
                 "referrer": referrer_input.strip(),
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -190,7 +188,6 @@ if not st.session_state.submitted:
             st.rerun()
 
 else:
-    # واجهة النجاح ورابط الواتساب
     st.success("🎉 تم التحقق من بياناتك وتسجيل لقبك بنجاح!")
     st.markdown("""
     <div style="text-align: center; margin-top: 20px;">
@@ -204,22 +201,21 @@ else:
             font-weight: bold;
             border-radius: 12px;
             box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
-        ">📱 دخول جروب الواتساب الآن</a>
+        ">📱 دخول جروب BELLONA الآن</a>
     </div>
     """, unsafe_allow_html=True)
 
-# 6. الزر المخفي ولوحة الإشراف (Admin Panel)
+# 7. الزر المخفي ولوحة الإشراف (Admin Panel)
 st.markdown("<br><hr style='border-color: rgba(255,255,255,0.05);'><br>", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    # زهرة الساكورا هي الزر المخفي
     with st.expander("🌸", expanded=False):
         admin_pass = st.text_input("رمز مرور المشرفين", type="password")
-        if admin_pass == "1234":  # يمكنك تغيير كلمة السر هنا
+        if admin_pass == ADMIN_PASSWORD:
             st.subheader("لوحة إشراف الاستقبال")
             
-            # قسم إضافة الألقاب المحجوزة يدويًا
+            # حجز ألقاب يدويًا
             st.write("---")
             st.markdown("**حجز لقب جديد يدويًا**")
             new_admin_nick = st.text_input("أدخل اللقب المراد حجزه:")
@@ -230,17 +226,35 @@ with col2:
                     st.success(f"تم حجز اللقب: {new_admin_nick}")
                     st.rerun()
 
-            # عرض قائمة الأعضاء والبيانات
+            # سجل الأعضاء ورسائل الترحيب للواتساب
             st.write("---")
-            st.markdown("**سجل الأعضاء المسجلين**")
+            st.markdown("**سجل الأعضاء ورسائل الترحيب**")
+            
             if db_data["members"]:
-                df = pd.DataFrame(db_data["members"])
-                df.columns = ["رقم الهاتف", "اللقب", "من طرف", "تاريخ التسجيل"]
-                st.dataframe(df, use_container_width=True)
+                for idx, member in enumerate(reversed(db_data["members"])):
+                    with st.container():
+                        st.markdown(f"👤 **اللقب:** `{member['nickname']}` | 📱 **الرقم:** `{member['phone']}`")
+                        st.caption(f"🤝 من طرف: {member['referrer']} | 📅 {member['date']}")
+                        
+                        # توليد نص المنشن بدون أي أقواس أو رموز إضافية لضمان عمل منشن الواتساب تلقائياً
+                        clean_tag = member['phone']
+                        
+                        welcome_text = (
+                            f"🌸 ✨ أهـلاً وسهـلاً بـالعـضـو الـجـديـد ✨ 🌸\n\n"
+                            f"👑 اللقب: {member['nickname']}\n"
+                            f"📱 الرقم: @{clean_tag}\n"
+                            f"🏰 مرحباً بك في عالم BELLONA 🌟\n\n"
+                            f"نورت الجروب يا بطل! يسعدنا انضمامك لعائلتنا الرهيبة، ونتمنى لك أوقاتاً ممتعة ومميزة معنا 🔥🤍\n\n"
+                            f"📜 ملاحظة مهمة جداً: لا تنسى مراجعة قوانين الجروب المثبتة والتأكد من الاطلاع عليها للحفاظ على ترتيب وتفاعل المجموعة وتجنب أي مخالفة.\n\n"
+                            f"نتمنى لك إقامة خرافية معنا! 🚀✨"
+                        )
+                        
+                        # كود مخصص يتيح النسخ بضغطة زر واحدة
+                        st.code(welcome_text, language="text")
+                        st.write("---")
             else:
                 st.info("لا يوجد أعضاء مسجلون حتى الآن.")
                 
-            st.write("---")
             st.markdown("**الألقاب المحجوزة حالياً:**")
             st.write(", ".join(db_data["registered_nicknames"]))
-  
+                
