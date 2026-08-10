@@ -83,6 +83,11 @@ st.markdown("""
     #MainMenu {
         display: none !important;
     }
+
+    /* --- التعديل الإضافي: إخفاء القائمة والفوتر تماماً لمنع الوصول للبروفايل --- */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
