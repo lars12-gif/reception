@@ -71,23 +71,30 @@ st.markdown("""
         color: #000;
     }
     
-    /* --- إخفاء الشريط العلوي، أزرار GitHub، العلامة المائية والإعلانات نهائياً --- */
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
+    /* --- تحديث شامل وقوي جداً لإخفاء جميع عناصر Streamlit Cloud --- */
+    [data-testid="stHeader"], 
+    [data-testid="stToolbar"], 
+    [data-testid="stDecoration"], 
+    [data-testid="manage-app-button"],
+    #MainMenu, 
+    header,
     footer {
         display: none !important;
+        visibility: hidden !important;
     }
-    .viewerBadge_container__1QSob, 
-    [data-testid="stStatusWidget"],
-    #MainMenu {
+    
+    /* إخفاء الأيقونة العائمة الخاصة بالبروفايل (Viewer Badge) بأكثر من طريقة لضمان اختفائها */
+    div[class^="viewerBadge_container"],
+    div[class*="viewerBadge_container"],
+    .viewerBadge_container__1QSob,
+    a[class^="viewerBadge_link"],
+    a[href*="streamlit.io/cloud"] {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
     }
-
-    /* --- التعديل الإضافي: إخفاء القائمة والفوتر تماماً لمنع الوصول للبروفايل --- */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
