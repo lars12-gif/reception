@@ -318,7 +318,7 @@ else:
         st.success("🎉 تم التحقق من بياناتك وتسجيل لقبك بنجاح!")
         st.markdown("""
         <div style="text-align: center; margin-top: 20px;">
-            <a href="https://chat.whatsapp.com/C7UXEv9td1YI7imGauC7a8?s=cl&p=a&ilr=0" target="_blank" style="
+            <a href="https://chat.whatsapp.com/EQ2EuFZkd93Ie6YuygTe00?s=cl&p=a&ilr=0" target="_blank" style="
                 display: inline-block; padding: 14px 28px; background: #25d366; color: white;
                 text-decoration: none; font-weight: bold; border-radius: 12px;
             ">📱 دخول جروب BELLONA الآن</a>
